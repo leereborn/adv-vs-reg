@@ -1,7 +1,6 @@
 import keras
 from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten
-from keras.layers import Conv2D
+from keras.layers import Dense, Activation, Flatten, MaxPooling2D, Conv2D
 
 def cnn_model(logits=False, input_ph=None, img_rows=28, img_cols=28,
               channels=1, nb_filters=128, nb_classes=10):
@@ -13,29 +12,49 @@ def cnn_model(logits=False, input_ph=None, img_rows=28, img_cols=28,
                   (needed if returning logits)
                   ("ph" stands for placeholder but it need not actually be a
                   placeholder)
-  :param img_rows: number of row in the image
-  :param img_cols: number of columns in the image
-  :param channels: number of color channels (e.g., 1 for MNIST)
-  :param nb_filters: number of convolutional filters per layer
-  :param nb_classes: the number of output classes
   :return:
   """
   model = Sequential()
 
   input_shape = (img_rows, img_cols, channels)
-
+  '''
   layers = [Conv2D(filters=nb_filters, kernel_size=(8, 8), strides=(2, 2), padding="same",input_shape=input_shape),
             Activation('relu'),
             Conv2D(filters=(nb_filters * 2), kernel_size=(6, 6), strides=(2, 2), padding="valid"),
             Activation('relu'),
             Conv2D(filters=(nb_filters * 2), kernel_size=(5, 5), strides=(1, 1), padding="valid"),
             Activation('relu'),
+            #Conv2D(filters=(nb_filters * 2), kernel_size=(3, 3), strides=(1, 1), padding="valid"),
+            #Activation('relu'),
             Flatten(),
             Activation('sigmoid'),
             Dense(512),
             Activation('sigmoid'),
             Dense(512),
             Activation('sigmoid'),
+            Dense(nb_classes)]
+  '''
+  layers = [Conv2D(filters=nb_filters, kernel_size=(3, 3), padding="same",input_shape=input_shape),
+            Activation('elu'),
+            Conv2D(filters=(nb_filters), kernel_size=(3, 3), padding="valid"),
+            Activation('elu'),
+            MaxPooling2D(pool_size=(2, 2)),
+            Conv2D(filters=(nb_filters * 2), kernel_size=(3, 3), padding="same"),
+            Activation('elu'),
+            Conv2D(filters=(nb_filters * 2), kernel_size=(3, 3)),
+            Activation('elu'),
+            MaxPooling2D(pool_size=(2, 2)),
+            Conv2D(filters=(nb_filters * 4), kernel_size=(3, 3), padding='same'),
+            Activation('elu'),
+            Conv2D(filters=(nb_filters * 4), kernel_size=(3, 3)),
+            Activation('elu'),
+            MaxPooling2D(pool_size=(2, 2)),
+            Flatten(),
+            #Activation('sigmoid'),
+            Dense(1024),
+            Activation('elu'),
+            Dense(128),
+            Activation('elu'),
             Dense(nb_classes)]
 
   for layer in layers:
@@ -56,6 +75,12 @@ def mlp_model(logits=False, input_ph=None, img_rows=28, img_cols=28,nb_classes=1
   model = Sequential([
     Flatten(),
     Dense(512, input_shape=(img_rows*img_cols,)),
+    Activation('sigmoid'),
+    Dense(512),
+    Activation('sigmoid'),
+    Dense(512),
+    Activation('sigmoid'),
+    Dense(512),
     Activation('sigmoid'),
     Dense(512),
     Activation('sigmoid'),

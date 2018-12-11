@@ -2,7 +2,7 @@ import tensorflow as tf
 import keras
 import numpy as np
 from cleverhans.utils_keras import KerasModelWrapper
-from cleverhans.attacks import SaliencyMapMethod
+from cleverhans.attacks import VirtualAdversarialMethod
 from cleverhans.dataset import MNIST
 from cleverhans.train import train
 from cleverhans.utils import AccuracyReport
@@ -81,16 +81,13 @@ loss = CrossEntropy(wrap, smoothing=LABEL_SMOOTHING)
 train(sess, loss, x_train, y_train, evaluate=evaluate, args=train_params_leg, rng=rng)
 
 # Initialize the Fast Gradient Sign Method (FGSM) attack object and graph
-jsma = SaliencyMapMethod(wrap, sess=sess)
-jsma_params = {'theta': 1., 'gamma': 0.1,
-                 'clip_min': 0., 'clip_max': 1.,
-                 'y_target': None}
+virtual_adv = VirtualAdversarialMethod(wrap, sess=sess)
+virtual_adv_params = {'clip_min': 0.,'clip_max': 1.}
 def attack(x):
-    return jsma.generate(x, **jsma_params)
+    return virtual_adv.generate(x, **virtual_adv_params)
 
-adv_x = attack(x)
-
-preds_adv = model(adv_x)
+#adv_x = attack(x)
+#preds_adv = model(adv_x)
 
 print("Repeating the process, using adversarial training")
 
@@ -103,12 +100,6 @@ def evaluate_2():
                             args=eval_params)
     print('Test accuracy on legitimate examples: %0.4f' % accuracy)
     report.adv_train_clean_eval = accuracy
-
-    # Accuracy of the adversarially trained model on adversarial examples
-    #accuracy = model_eval(sess, x, y, preds_adv, x_test,
-    #                        y_test, args=eval_params)
-    #print('Test accuracy on adversarial examples: %0.4f' % accuracy)
-    #report.adv_train_adv_eval = accuracy
 
 train_params_adv = {
     'nb_epochs': NB_EPOCHS_ADV,
